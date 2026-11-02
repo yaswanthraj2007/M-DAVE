@@ -1,0 +1,28 @@
+.compliance { padding: 6rem 1.5rem; }
+
+.compliance__box {
+  max-width: 56rem;
+  margin: 0 auto;
+  padding: 2.5rem;
+  text-align: center;
+  border: 1px solid var(--accent-border);
+  border-radius: 1.5rem;
+  background: linear-gradient(to bottom, var(--glow), transparent);
+}
+
+.compliance__title {
+  font-size: 1.875rem;
+  font-weight: 700;
+  color: var(--text-heading);
+}
+.compliance__text {
+  margin-top: 1.5rem;
+  font-size: 1.125rem;
+  line-height: 1.7;
+  color: var(--text-body);
+}
+
+@media (min-width: 640px) {
+  .compliance__box { padding: 4rem; }
+  .compliance__title { font-size: 2.25rem; }
+}

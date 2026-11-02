@@ -1,0 +1,47 @@
+:root {
+  /* Backgrounds */
+  --bg: #0b0b0d;
+  --bg-card: #151517;
+  --bg-nav: rgba(11, 11, 13, 0.85);
+  --glow: rgba(138, 3, 3, 0.45);          /* blood red light */
+
+  /* Reds */
+  --accent: #e0262b;                       /* apple red */
+  --accent-hover: #ff4448;
+  --accent-soft: rgba(224, 38, 43, 0.12);
+  --accent-border: rgba(224, 38, 43, 0.35);
+  --blood: #8a0303;                        /* blood red */
+
+  /* Grays (replace white) */
+  --text-heading: #c9c9ce;
+  --text-body: #9a9aa2;
+  --text-muted: #6b6b73;
+  --on-accent: #1a1a1c;                    /* text on red buttons */
+  --border: rgba(160, 160, 170, 0.18);
+  --hover-surface: rgba(160, 160, 170, 0.1);
+}
+
+/* Shared buttons */
+.btn {
+  display: inline-block;
+  padding: 0.6rem 1.25rem;
+  border-radius: 0.5rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+.btn--primary {
+  background: var(--accent);
+  color: var(--on-accent);
+  border: 1px solid var(--accent);
+}
+.btn--primary:hover { background: var(--accent-hover); }
+.btn--outline {
+  background: transparent;
+  color: var(--text-heading);
+  border: 1px solid var(--border);
+}
+.btn--outline:hover { background: var(--hover-surface); }
+.btn--lg { padding: 0.8rem 1.5rem; font-size: 1rem; }
