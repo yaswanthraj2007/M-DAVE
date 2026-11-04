@@ -28,8 +28,8 @@ export default function Generate() {
           <h1 className="mt-1 text-3xl font-bold text-zinc-200 sm:text-4xl">Create Your Avatar</h1>
         </header>
 
-        {/* Upload grid */}
-        <section className="mt-10 grid grid-cols-1 gap-6 md:grid-cols-2">
+        {/* Upload grid: source face (left), target body (right) */}
+        <section className="mt-10 grid grid-cols-1 gap-6 lg:grid-cols-2">
           <div className="min-h-96 rounded-2xl border border-dashed border-white/15 bg-zinc-900/60">
             <FileUpload
               title="Upload Source Face"
@@ -66,7 +66,7 @@ export default function Generate() {
             className="text-red-500 font-semibold hover:text-red-400 shadow-[0_0_15px_rgba(239,68,68,0.35)]"
           >
             <IconSparkles className="size-4 text-[#FFFDF0]" />
-            <span>Generate</span>
+            <span>Run Generation</span>
           </RainbowButton>
 
           {!ready && (

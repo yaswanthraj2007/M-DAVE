@@ -2,6 +2,8 @@ import Navbar from './components/Navbar'
 import Hero from './components/Hero'
 import HowItWorks from './components/HowItWorks'
 import Compliance from './components/Compliance'
+import generationImg from './assets/generation.png'
+import detectionImg from './assets/dectection.png'
 import './App.css'
 
 const generationSteps = [
@@ -25,13 +27,15 @@ export default function App() {
       <main>
         <Hero />
         <HowItWorks
-          id="generate" eyebrow="Generation" imageSide="right" imageLabel="Generation visual"
+          id="generate" eyebrow="Generation" imageSide="right"
+          image={generationImg} imageAlt="Diagram of the M-DAVE generation pipeline"
           title="How Generation Works"
           intro="A privacy-first pipeline that turns two photos into a watermarked, signed result."
           steps={generationSteps}
         />
         <HowItWorks
-          id="detect" eyebrow="Detection" imageSide="left" imageLabel="Detection visual"
+          id="detect" eyebrow="Detection" imageSide="left"
+          image={detectionImg} imageAlt="Diagram of the M-DAVE detection pipeline"
           title="How Detection Works"
           intro="Two analysis branches, one fused verdict on whether media is authentic."
           steps={detectionSteps}

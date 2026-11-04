@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, Navigate, useLocation, useNavigate, useParams } from "react-router-dom";
 import { motion } from "motion/react";
 import {
   IconHome,
@@ -11,39 +11,51 @@ import {
 } from "@tabler/icons-react";
 import { Sidebar, SidebarBody, SidebarLink } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
-import GenerationPipeline from "./GenerationPipeline";
-import DetectionPipeline from "./DetectionPipeline";
+import { USER } from "@/data/mockUser";
 import AssetsView from "@/components/assets/AssetsView";
 
 const NAV = [
-  { slug: "home", label: "Home", icon: IconHome },
-  { slug: "generation", label: "Generation Engine", icon: IconCpu },
-  { slug: "detection", label: "Detection Engine", icon: IconShieldCheck },
-  { slug: "assets", label: "Assets", icon: IconPhoto },
-  { slug: "profile", label: "Profile", icon: IconUser },
-  { slug: "settings", label: "Settings", icon: IconSettings },
+  { label: "Home", to: "/dashboard", icon: IconHome },
+  { label: "Generation Engine", to: "/generate", icon: IconCpu },
+  { label: "Detection Engine", to: "/detect", icon: IconShieldCheck },
+  { label: "Assets", to: "/dashboard/assets", icon: IconPhoto },
+  { label: "Profile", to: "/dashboard/profile", icon: IconUser },
+  { label: "Settings", to: "/dashboard/settings", icon: IconSettings },
 ];
 
-const USER = {
-  name: "Student Admin",
-  email: "admin@mdave.edu",
-  role: "Administrator",
-  avatar: "https://api.dicebear.com/9.x/avataaars/svg?seed=MDAVEAdmin",
-};
-
-export default function DashboardLayout() {
+/**
+ * Shared shell: sidebar + content area.
+ *
+ * - Pages (Home, Generation, Detection) pass their content as `children`.
+ * - With no children it renders the built-in tab views (Assets, Profile, Settings)
+ *   chosen by the `/dashboard/:tab` route.
+ */
+export default function DashboardLayout({ children }) {
   const [open, setOpen] = useState(false);
+  const { pathname } = useLocation();
   const { tab } = useParams();
   const navigate = useNavigate();
 
-  // The URL is the source of truth for the active tab
-  const activeTab = NAV.find((n) => n.slug === tab)?.label ?? "Home";
+  // The URL decides which sidebar item is highlighted
+  const current = pathname.replace(/\/+$/, "") || "/";
+  const activeTo = NAV.find((n) => n.to === current)?.to;
 
-  const goTo = (label) => {
-    const item = NAV.find((n) => n.label === label);
-    if (item) navigate(`/dashboard/${item.slug}`);
+  const goTo = (to) => {
+    navigate(to);
     if (window.innerWidth < 768) setOpen(false);
   };
+
+  const tabViews = {
+    assets: <AssetsView embedded />,
+    profile: <ProfileView />,
+    settings: <SettingsView />,
+  };
+
+  let content = children;
+  if (!children) {
+    if (!tabViews[tab]) return <Navigate to="/dashboard" replace />;
+    content = tabViews[tab];
+  }
 
   return (
     <div className="flex h-screen w-full flex-1 flex-col overflow-hidden md:flex-row">
@@ -52,16 +64,16 @@ export default function DashboardLayout() {
           <div className="flex flex-1 flex-col overflow-x-hidden overflow-y-auto">
             {open ? <Logo /> : <LogoIcon />}
             <nav className="mt-8 flex flex-col gap-2">
-              {NAV.map(({ slug, label, icon: Icon }) => {
-                const active = activeTab === label;
+              {NAV.map(({ label, to, icon: Icon }) => {
+                const active = activeTo === to;
                 return (
                   <SidebarLink
-                    key={slug}
+                    key={to}
                     active={active}
-                    onClick={() => goTo(label)}
+                    onClick={() => goTo(to)}
                     link={{
                       label,
-                      href: `/dashboard/${slug}`,
+                      href: to,
                       icon: (
                         <Icon
                           className={cn(
@@ -79,7 +91,7 @@ export default function DashboardLayout() {
 
           <div>
             <SidebarLink
-              onClick={() => goTo("Profile")}
+              onClick={() => goTo("/dashboard/profile")}
               link={{
                 label: USER.name,
                 href: "/dashboard/profile",
@@ -98,7 +110,20 @@ export default function DashboardLayout() {
         </SidebarBody>
       </Sidebar>
 
-      <Dashboard activeTab={activeTab} setActiveTab={goTo} />
+      {/* Content area */}
+      <div className="flex min-h-0 flex-1">
+        <div className="h-full w-full overflow-y-auto rounded-tl-2xl border border-white/10 bg-zinc-950/40 p-4 md:p-10">
+          <motion.div
+            key={pathname}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.25 }}
+            className="mx-auto w-full max-w-5xl"
+          >
+            {content}
+          </motion.div>
+        </div>
+      </div>
     </div>
   );
 }
@@ -141,87 +166,7 @@ export const LogoIcon = () => (
   </Link>
 );
 
-/* ---------------- Dynamic content area ---------------- */
-
-const Dashboard = ({ activeTab, setActiveTab }) => {
-  const views = {
-    Home: <HomeView onNavigate={setActiveTab} />,
-    "Generation Engine": <GenerationPipeline />,
-    "Detection Engine": <DetectionPipeline />,
-    Assets: <AssetsView embedded />,
-    Profile: <ProfileView />,
-    Settings: <SettingsView />,
-  };
-
-  return (
-    <div className="flex min-h-0 flex-1">
-      <div className="h-full w-full overflow-y-auto rounded-tl-2xl border border-white/10 bg-zinc-950/40 p-4 md:p-10">
-        <motion.div
-          key={activeTab}
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.25 }}
-          className="mx-auto w-full max-w-5xl"
-        >
-          {views[activeTab]}
-        </motion.div>
-      </div>
-    </div>
-  );
-};
-
-/* ---------------- Views ---------------- */
-
-const STATS = [
-  { label: "Images generated", value: "12" },
-  { label: "Images verified", value: "34" },
-  { label: "Raw images stored", value: "0" },
-];
-
-const HomeView = ({ onNavigate }) => (
-  <div className="space-y-8">
-    <div>
-      <p className="text-xs font-semibold uppercase tracking-widest text-red-500">Welcome back</p>
-      <h1 className="mt-1 text-2xl font-bold text-zinc-200 sm:text-3xl">M-DAVE Control Center</h1>
-      <p className="mt-2 max-w-2xl text-sm text-zinc-400">
-        Generate watermarked, signed synthetic media or verify whether an image is real. All
-        uploads are processed in memory and purged after inference.
-      </p>
-    </div>
-
-    <div className="grid gap-4 sm:grid-cols-3">
-      {STATS.map((s) => (
-        <div key={s.label} className="rounded-xl border border-white/10 bg-zinc-900/60 p-5">
-          <p className="text-3xl font-bold text-zinc-200">{s.value}</p>
-          <p className="mt-1 text-sm text-zinc-400">{s.label}</p>
-        </div>
-      ))}
-    </div>
-
-    <div className="grid gap-4 md:grid-cols-2">
-      <button
-        onClick={() => onNavigate("Generation Engine")}
-        className="rounded-xl border border-white/10 bg-zinc-900/60 p-6 text-left transition hover:border-cyan-500/40"
-      >
-        <IconCpu className="h-6 w-6 text-cyan-400" />
-        <h3 className="mt-3 font-semibold text-zinc-200">Generation Engine</h3>
-        <p className="mt-1 text-sm text-zinc-400">
-          Promptless identity transfer with watermark and C2PA signing.
-        </p>
-      </button>
-      <button
-        onClick={() => onNavigate("Detection Engine")}
-        className="rounded-xl border border-white/10 bg-zinc-900/60 p-6 text-left transition hover:border-rose-500/40"
-      >
-        <IconShieldCheck className="h-6 w-6 text-rose-400" />
-        <h3 className="mt-3 font-semibold text-zinc-200">Detection Engine</h3>
-        <p className="mt-1 text-sm text-zinc-400">
-          Multimodal CV + NLP check with a real-vs-synthetic score.
-        </p>
-      </button>
-    </div>
-  </div>
-);
+/* ---------------- Built-in tab views ---------------- */
 
 const ProfileView = () => (
   <div className="space-y-6">

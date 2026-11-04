@@ -67,6 +67,15 @@
   font-size: 0.875rem;
 }
 
+.hiw__image {
+  display: block;
+  width: 100%;
+  aspect-ratio: 3 / 4;       /* same box as the placeholder, so the layout doesn't shift */
+  object-fit: cover;         /* fills the box; use "contain" to show the whole image */
+  border-radius: 0.75rem;    /* the 3D card around it provides the border */
+  background: var(--bg-card);
+}
+
 @media (min-width: 640px) {
   .hiw__title { font-size: 2.25rem; }
 }
