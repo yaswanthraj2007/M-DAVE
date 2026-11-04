@@ -1,9 +1,20 @@
 "use client";
-import { createContext, useContext, useState } from "react";
+import React, { createContext, useContext, useState } from "react";
+import { Link } from "react-router-dom";
 import { AnimatePresence, motion } from "motion/react";
-import { IconMenu2, IconX } from "@tabler/icons-react";
+import {
+  IconCpu,
+  IconFolder,
+  IconHome,
+  IconMenu2,
+  IconSettings,
+  IconShieldCheck,
+  IconUser,
+  IconX,
+} from "@tabler/icons-react";
 import { cn } from "@/lib/utils";
 
+// --- Context & Custom Hook ---
 const SidebarContext = createContext(undefined);
 
 export const useSidebar = () => {
@@ -12,6 +23,7 @@ export const useSidebar = () => {
   return context;
 };
 
+// --- Provider & Core Components ---
 export const SidebarProvider = ({ children, open: openProp, setOpen: setOpenProp, animate = true }) => {
   const [openState, setOpenState] = useState(false);
   const open = openProp !== undefined ? openProp : openState;
@@ -94,21 +106,10 @@ export const MobileSidebar = ({ className, children, ...props }) => {
 export const SidebarLink = ({ link, active = false, onClick, className, ...props }) => {
   const { open, animate } = useSidebar();
 
-  const handleClick = (e) => {
-    if (onClick) {
-      e.preventDefault();
-      onClick(e);
-    }
-  };
+  const isInternal = link.href && link.href.startsWith("/") && !link.href.startsWith("//");
 
-  return (
-    <a
-      href={link.href}
-      onClick={handleClick}
-      aria-current={active ? "page" : undefined}
-      className={cn("group/sidebar flex items-center justify-start gap-2 py-2", className)}
-      {...props}
-    >
+  const content = (
+    <>
       {link.icon}
       <motion.span
         animate={{
@@ -122,6 +123,172 @@ export const SidebarLink = ({ link, active = false, onClick, className, ...props
       >
         {link.label}
       </motion.span>
+    </>
+  );
+
+  const sharedClasses = cn("group/sidebar flex items-center justify-start gap-2 py-2", className);
+
+  if (isInternal) {
+    return (
+      <Link
+        to={link.href}
+        onClick={onClick}
+        aria-current={active ? "page" : undefined}
+        className={sharedClasses}
+        {...props}
+      >
+        {content}
+      </Link>
+    );
+  }
+
+  const handleClick = (e) => {
+    if (onClick) {
+      e.preventDefault();
+      onClick(e);
+    }
+  };
+
+  return (
+    <a
+      href={link.href}
+      onClick={handleClick}
+      aria-current={active ? "page" : undefined}
+      className={sharedClasses}
+      {...props}
+    >
+      {content}
+    </a>
+  );
+};
+
+// --- Sidebar Demo Implementation ---
+export function SidebarDemo() {
+  const [open, setOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState("Home");
+
+  // Assets link placed between Generation Engine and Detection Engine
+  const links = [
+    {
+      label: "Home",
+      id: "Home",
+      href: "#",
+      icon: (
+        <IconHome className="h-5 w-5 shrink-0 text-neutral-700 dark:text-neutral-200" />
+      ),
+    },
+    {
+      label: "Generation Engine",
+      id: "Generation Engine",
+      href: "#",
+      icon: (
+        <IconCpu className="h-5 w-5 shrink-0 text-neutral-700 dark:text-neutral-200" />
+      ),
+    },
+    {
+      label: "Assets",
+      id: "Assets",
+      href: "#",
+      icon: (
+        <IconFolder className="h-5 w-5 shrink-0 text-neutral-700 dark:text-neutral-200" />
+      ),
+    },
+    {
+      label: "Detection Engine",
+      id: "Detection Engine",
+      href: "#",
+      icon: (
+        <IconShieldCheck className="h-5 w-5 shrink-0 text-neutral-700 dark:text-neutral-200" />
+      ),
+    },
+    {
+      label: "Profile",
+      id: "Profile",
+      href: "#",
+      icon: (
+        <IconUser className="h-5 w-5 shrink-0 text-neutral-700 dark:text-neutral-200" />
+      ),
+    },
+    {
+      label: "Settings",
+      id: "Settings",
+      href: "#",
+      icon: (
+        <IconSettings className="h-5 w-5 shrink-0 text-neutral-700 dark:text-neutral-200" />
+      ),
+    },
+  ];
+
+  return (
+    <div
+      className={cn(
+        "mx-auto flex w-full flex-1 flex-col overflow-hidden border border-neutral-200 bg-gray-100 md:flex-row dark:border-neutral-700 dark:bg-neutral-800",
+        "h-screen"
+      )}
+    >
+      <Sidebar open={open} setOpen={setOpen}>
+        <SidebarBody className="justify-between gap-10">
+          <div className="flex flex-1 flex-col overflow-x-hidden overflow-y-auto">
+            {open ? <Logo /> : <LogoIcon />}
+            <div className="mt-8 flex flex-col gap-2">
+              {links.map((link, idx) => (
+                <SidebarLink
+                  key={idx}
+                  link={link}
+                  active={activeTab === link.id}
+                  onClick={() => setActiveTab(link.id)}
+                />
+              ))}
+            </div>
+          </div>
+          <div>
+            <SidebarLink
+              link={{
+                label: "Student Admin",
+                href: "#",
+                icon: (
+                  <img
+                    src="https://assets.aceternity.com/manu.png"
+                    className="h-7 w-7 shrink-0 rounded-full"
+                    width={50}
+                    height={50}
+                    alt="Avatar"
+                  />
+                ),
+              }}
+            />
+          </div>
+        </SidebarBody>
+      </Sidebar>
+    </div>
+  );
+}
+
+export const Logo = () => {
+  return (
+    <a
+      href="#"
+      className="relative z-20 flex items-center space-x-2 py-1 text-sm font-normal text-black"
+    >
+      <div className="h-5 w-6 shrink-0 rounded-tl-lg rounded-tr-sm rounded-br-lg rounded-bl-sm bg-red-600" />
+      <motion.span
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="font-bold whitespace-pre text-black dark:text-white tracking-wider"
+      >
+        M-DAVE
+      </motion.span>
+    </a>
+  );
+};
+
+export const LogoIcon = () => {
+  return (
+    <a
+      href="#"
+      className="relative z-20 flex items-center space-x-2 py-1 text-sm font-normal text-black"
+    >
+      <div className="h-5 w-6 shrink-0 rounded-tl-lg rounded-tr-sm rounded-br-lg rounded-bl-sm bg-red-600" />
     </a>
   );
 };

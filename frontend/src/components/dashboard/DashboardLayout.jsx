@@ -1,10 +1,11 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { motion } from "motion/react";
 import {
   IconHome,
   IconCpu,
   IconShieldCheck,
+  IconPhoto,
   IconUser,
   IconSettings,
 } from "@tabler/icons-react";
@@ -12,13 +13,15 @@ import { Sidebar, SidebarBody, SidebarLink } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
 import GenerationPipeline from "./GenerationPipeline";
 import DetectionPipeline from "./DetectionPipeline";
+import AssetsView from "@/components/assets/AssetsView";
 
 const NAV = [
-  { label: "Home", icon: IconHome },
-  { label: "Generation Engine", icon: IconCpu },
-  { label: "Detection Engine", icon: IconShieldCheck },
-  { label: "Profile", icon: IconUser },
-  { label: "Settings", icon: IconSettings },
+  { slug: "home", label: "Home", icon: IconHome },
+  { slug: "generation", label: "Generation Engine", icon: IconCpu },
+  { slug: "detection", label: "Detection Engine", icon: IconShieldCheck },
+  { slug: "assets", label: "Assets", icon: IconPhoto },
+  { slug: "profile", label: "Profile", icon: IconUser },
+  { slug: "settings", label: "Settings", icon: IconSettings },
 ];
 
 const USER = {
@@ -30,30 +33,35 @@ const USER = {
 
 export default function DashboardLayout() {
   const [open, setOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState("Home");
+  const { tab } = useParams();
+  const navigate = useNavigate();
 
-  const goTo = (tab) => {
-    setActiveTab(tab);
+  // The URL is the source of truth for the active tab
+  const activeTab = NAV.find((n) => n.slug === tab)?.label ?? "Home";
+
+  const goTo = (label) => {
+    const item = NAV.find((n) => n.label === label);
+    if (item) navigate(`/dashboard/${item.slug}`);
     if (window.innerWidth < 768) setOpen(false);
   };
 
   return (
-    <div className="flex h-screen w-full flex-1 flex-col overflow-hidden bg-zinc-900 md:flex-row">
+    <div className="flex h-screen w-full flex-1 flex-col overflow-hidden md:flex-row">
       <Sidebar open={open} setOpen={setOpen}>
         <SidebarBody className="justify-between gap-10">
           <div className="flex flex-1 flex-col overflow-x-hidden overflow-y-auto">
             {open ? <Logo /> : <LogoIcon />}
             <nav className="mt-8 flex flex-col gap-2">
-              {NAV.map(({ label, icon: Icon }) => {
+              {NAV.map(({ slug, label, icon: Icon }) => {
                 const active = activeTab === label;
                 return (
                   <SidebarLink
-                    key={label}
+                    key={slug}
                     active={active}
                     onClick={() => goTo(label)}
                     link={{
                       label,
-                      href: "#",
+                      href: `/dashboard/${slug}`,
                       icon: (
                         <Icon
                           className={cn(
@@ -74,7 +82,7 @@ export default function DashboardLayout() {
               onClick={() => goTo("Profile")}
               link={{
                 label: USER.name,
-                href: "#",
+                href: "/dashboard/profile",
                 icon: (
                   <img
                     src={USER.avatar}
@@ -90,7 +98,7 @@ export default function DashboardLayout() {
         </SidebarBody>
       </Sidebar>
 
-      <DashboardContent activeTab={activeTab} setActiveTab={setActiveTab} />
+      <Dashboard activeTab={activeTab} setActiveTab={goTo} />
     </div>
   );
 }
@@ -135,18 +143,19 @@ export const LogoIcon = () => (
 
 /* ---------------- Dynamic content area ---------------- */
 
-const DashboardContent = ({ activeTab, setActiveTab }) => {
+const Dashboard = ({ activeTab, setActiveTab }) => {
   const views = {
     Home: <HomeView onNavigate={setActiveTab} />,
-    "Generation Engine": <GenerationEngineView />,
-    "Detection Engine": <DetectionEngineView />,
+    "Generation Engine": <GenerationPipeline />,
+    "Detection Engine": <DetectionPipeline />,
+    Assets: <AssetsView embedded />,
     Profile: <ProfileView />,
     Settings: <SettingsView />,
   };
 
   return (
     <div className="flex min-h-0 flex-1">
-      <div className="h-full w-full overflow-y-auto rounded-tl-2xl border border-white/10 bg-zinc-950 p-4 md:p-10">
+      <div className="h-full w-full overflow-y-auto rounded-tl-2xl border border-white/10 bg-zinc-950/40 p-4 md:p-10">
         <motion.div
           key={activeTab}
           initial={{ opacity: 0, y: 8 }}
@@ -163,6 +172,12 @@ const DashboardContent = ({ activeTab, setActiveTab }) => {
 
 /* ---------------- Views ---------------- */
 
+const STATS = [
+  { label: "Images generated", value: "12" },
+  { label: "Images verified", value: "34" },
+  { label: "Raw images stored", value: "0" },
+];
+
 const HomeView = ({ onNavigate }) => (
   <div className="space-y-8">
     <div>
@@ -174,39 +189,36 @@ const HomeView = ({ onNavigate }) => (
       </p>
     </div>
 
-    <div className="flex flex-col gap-6">
-      <GenerationPipeline />
-      <DetectionPipeline />
+    <div className="grid gap-4 sm:grid-cols-3">
+      {STATS.map((s) => (
+        <div key={s.label} className="rounded-xl border border-white/10 bg-zinc-900/60 p-5">
+          <p className="text-3xl font-bold text-zinc-200">{s.value}</p>
+          <p className="mt-1 text-sm text-zinc-400">{s.label}</p>
+        </div>
+      ))}
     </div>
-  </div>
-);
 
-const GenerationEngineView = () => (
-  <div className="space-y-6">
-    <div>
-      <p className="text-xs font-semibold uppercase tracking-widest text-cyan-400">Pipeline 1</p>
-      <h1 className="mt-1 text-2xl font-bold text-zinc-200 sm:text-3xl">Generation Engine</h1>
-      <p className="mt-2 text-sm text-zinc-400">
-        Upload a source face and a target body image to generate a watermarked, signed result.
-      </p>
-    </div>
-    <div className="rounded-xl border border-white/10 bg-zinc-900/60 p-8 text-center text-zinc-500">
-      Upload interface coming soon.
-    </div>
-  </div>
-);
-
-const DetectionEngineView = () => (
-  <div className="space-y-6">
-    <div>
-      <p className="text-xs font-semibold uppercase tracking-widest text-rose-400">Pipeline 2</p>
-      <h1 className="mt-1 text-2xl font-bold text-zinc-200 sm:text-3xl">Detection Engine</h1>
-      <p className="mt-2 text-sm text-zinc-400">
-        Upload an image and an optional caption to receive a real-vs-synthetic confidence score.
-      </p>
-    </div>
-    <div className="rounded-xl border border-white/10 bg-zinc-900/60 p-8 text-center text-zinc-500">
-      Upload interface coming soon.
+    <div className="grid gap-4 md:grid-cols-2">
+      <button
+        onClick={() => onNavigate("Generation Engine")}
+        className="rounded-xl border border-white/10 bg-zinc-900/60 p-6 text-left transition hover:border-cyan-500/40"
+      >
+        <IconCpu className="h-6 w-6 text-cyan-400" />
+        <h3 className="mt-3 font-semibold text-zinc-200">Generation Engine</h3>
+        <p className="mt-1 text-sm text-zinc-400">
+          Promptless identity transfer with watermark and C2PA signing.
+        </p>
+      </button>
+      <button
+        onClick={() => onNavigate("Detection Engine")}
+        className="rounded-xl border border-white/10 bg-zinc-900/60 p-6 text-left transition hover:border-rose-500/40"
+      >
+        <IconShieldCheck className="h-6 w-6 text-rose-400" />
+        <h3 className="mt-3 font-semibold text-zinc-200">Detection Engine</h3>
+        <p className="mt-1 text-sm text-zinc-400">
+          Multimodal CV + NLP check with a real-vs-synthetic score.
+        </p>
+      </button>
     </div>
   </div>
 );
@@ -215,11 +227,7 @@ const ProfileView = () => (
   <div className="space-y-6">
     <h1 className="text-2xl font-bold text-zinc-200 sm:text-3xl">Profile</h1>
     <div className="flex items-center gap-5 rounded-xl border border-white/10 bg-zinc-900/60 p-6">
-      <img
-        src={USER.avatar}
-        alt="Avatar"
-        className="h-20 w-20 rounded-full bg-zinc-700"
-      />
+      <img src={USER.avatar} alt="Avatar" className="h-20 w-20 rounded-full bg-zinc-700" />
       <div>
         <p className="text-lg font-semibold text-zinc-200">{USER.name}</p>
         <p className="text-sm text-zinc-400">{USER.email}</p>
